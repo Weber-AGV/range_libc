@@ -95,7 +95,7 @@ def locate_cuda():
 
 
 # compiler_flags = ["-w","-std=c++11", "-march=native", "-ffast-math", "-fno-math-errno"]
-compiler_flags = ["-w","-std=c++11", "-march=native", "-ffast-math", "-fno-math-errno", "-O3"]
+compiler_flags = ["-w","-std=c++11", "-ffast-math", "-fno-math-errno", "-O3"]
 nvcc_flags = ['-arch=sm_87', '--ptxas-options=-v', '-c', '--compiler-options', "'-fPIC'", "-w","-std=c++11"]
 include_dirs = ["../", numpy_include]
 depends = ["../includes/*.h"]
@@ -108,10 +108,6 @@ if use_cuda:
     compiler_flags.append("-DUSE_CUDA=1");        nvcc_flags.append("-DUSE_CUDA=1")
     compiler_flags.append("-DCHUNK_SIZE="+CHUNK_SIZE); nvcc_flags.append("-DCHUNK_SIZE="+CHUNK_SIZE)
     compiler_flags.append("-DNUM_THREADS="+NUM_THREADS);   nvcc_flags.append("-DNUM_THREADS="+NUM_THREADS)
-    compiler_flags.append("-DCMAKE_C_COMPILER=$(which gcc-11)")
-    compiler_flags.append("-DCMAKE_CXX_COMPILER=$(which g++-11)")
-    nvcc_flags.append("-DCMAKE_C_COMPILER=$(which gcc-11)")
-    nvcc_flags.append("-DCMAKE_CXX_COMPILER=$(which g++-11)")
 
     CUDA = locate_cuda()
     include_dirs.append(CUDA['include'])
@@ -119,8 +115,6 @@ if use_cuda:
 
 if trace:
     compiler_flags.append("-D_MAKE_TRACE_MAP=1")
-    compiler_flags.append("-DCMAKE_C_COMPILER=$(which gcc-11)")
-    compiler_flags.append("-DCMAKE_CXX_COMPILER=$(which g++-11)")
 
 
 ##################################################################
@@ -153,12 +147,13 @@ def customize_compiler_for_nvcc(self):
             # from the extra_compile_args in the Extension class
             postargs = extra_postargs['nvcc']
         else:
+            # explicitly reset to gcc for all non-.cu files
+            self.set_executable('compiler_so', default_compiler_so)
             postargs = extra_postargs['gcc']
-        # postargs = extra_postargs#['gcc']
 
         super(obj, src, ext, cc_args, postargs, pp_opts)
         # reset the default compiler_so, which we might have changed for cuda
-        self.compiler_so = default_compiler_so
+        self.set_executable('compiler_so', default_compiler_so)
 
     # inject our redefined _compile method into the class
     self._compile = _compile
