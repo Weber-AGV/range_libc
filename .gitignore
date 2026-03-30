@@ -10,3 +10,9 @@ paper/data/synthetic
 ._.*
 paper/bak
 pywrapper/watch.sh
+
+# Claude Code
+.claude/
+
+# VS Code
+.vscode/
